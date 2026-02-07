@@ -53,3 +53,36 @@ async def register(
         "message": "User registered successfully",
         "email": user.email,
     }
+
+
+@router.post("/login")
+async def user_login(
+    data: LoginRequest, response: Response, db: AsyncSession = Depends(get_async_db)
+):
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    if not verify_password(data.password, str(user.hashed_password)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid password",
+        )
+
+    access_token = create_access_token(data={"sub": str(user.id), "name": str(user.name)})
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 60,
+    )
+
+    return {"message": "Login successful", "email": user.email}
