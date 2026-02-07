@@ -1,22 +1,25 @@
-from fastapi import FastAPI, Depends
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db, engine, Base
-from app.models import user
-import asyncio
+import app.models.user  # noqa: F401
+from app.db.session import Base, engine
+
+from fastapi import FastAPI
+
 
 app = FastAPI()
-async def create_tables():
+
+
+async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 @app.on_event("startup")
-async def on_startup():
-    await create_tables() 
+async def on_startup() -> None:
+    await create_tables()
+
 
 @app.get("/health")
-def health_check():
-    return {"response" : "ok"}
+def health_check() -> dict:
+    return {"response": "ok"}
 
 
 # @app.get("/")
