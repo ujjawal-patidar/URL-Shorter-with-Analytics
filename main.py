@@ -1,4 +1,4 @@
-import app.models.user  # noqa: F401
+from app.models import user, shorturl
 from app.db.session import Base, engine
 
 from fastapi import FastAPI
