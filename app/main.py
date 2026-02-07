@@ -1,10 +1,10 @@
 from app.models import user, shorturl
 from app.db.session import Base, engine
-
+from app.api.api import api_router
 from fastapi import FastAPI
 
 
-app = FastAPI()
+app = FastAPI(title="URL Shortener + Analytics")
 
 
 async def create_tables() -> None:
@@ -15,6 +15,9 @@ async def create_tables() -> None:
 @app.on_event("startup")
 async def on_startup() -> None:
     await create_tables()
+
+
+app.include_router(api_router)
 
 
 @app.get("/health")

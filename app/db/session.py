@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
-load_dotenv()
 
 DATABASE_URI = os.getenv("DATABASE_URI")
 
@@ -32,9 +31,6 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db() -> AsyncGenerator:
-    db = AsyncSessionLocal()
-    try:
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        await db.close()
