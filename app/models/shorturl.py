@@ -1,8 +1,9 @@
 from app.db.session import Base
-from sqlalchemy import Column, String, Boolean, Text, DateTime, ForeignKey, BigInteger
+from sqlalchemy import Column, String, Boolean, Text, DateTime, ForeignKey, BigInteger, TIMESTAMP
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
 
 
 class ShortURL(Base):
@@ -17,6 +18,7 @@ class ShortURL(Base):
     is_active = Column(Boolean, default=True)
     click_count = Column(BigInteger, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # user = relationship("User" , back_populates="short_url")

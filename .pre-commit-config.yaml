@@ -9,11 +9,20 @@ repos:
   #   hooks:
   #     - id: flake8
   
+  # - repo: local
+  #   hooks:
+  #     - id: pytest-staged
+  #       name: pytest (staged files)
+  #       entry: pytest
+  #       language: system
+  #       types: [python]
+  #       pass_filenames: true   # by this Only runs tests of the staged files
+
   - repo: local
     hooks:
-      - id: pytest
-        name: pytest
+      - id: pytest-all
+        name: pytest (full suite)
         entry: pytest
         language: system
-        types: [python]
+        stages: [pre-push]    #only runs on pre-push
         pass_filenames: false
