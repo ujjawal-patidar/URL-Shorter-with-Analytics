@@ -7,6 +7,7 @@ from sqlalchemy.future import select
 from app.models.user import User
 from app.core.security import get_password_hash, verify_password
 from app.core.jwt import create_access_token
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -86,3 +87,13 @@ async def user_login(
     )
 
     return {"message": "Login successful", "email": user.email}
+
+
+@router.get("/me")
+async def get_current_user(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "created_at": current_user.created_at,
+    }
