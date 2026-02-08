@@ -9,6 +9,7 @@ from app.core.security import get_password_hash, verify_password
 from app.core.jwt import create_access_token
 from app.api.deps import get_current_user
 
+
 router = APIRouter()
 
 
@@ -41,18 +42,11 @@ async def register(
 
     access_token = create_access_token(data={"sub": str(user.id), "name": str(user.name)})
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 60,
-    )
-
     return {
         "message": "User registered successfully",
         "email": user.email,
+        "access_token": access_token,
+        "token_type": "bearer",
     }
 
 
@@ -77,16 +71,12 @@ async def user_login(
 
     access_token = create_access_token(data={"sub": str(user.id), "name": str(user.name)})
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 60,
-    )
-
-    return {"message": "Login successful", "email": user.email}
+    return {
+        "message": "Login successful",
+        "email": user.email,
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 
 @router.get("/me")
