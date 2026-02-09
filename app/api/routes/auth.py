@@ -80,7 +80,7 @@ async def user_login(
 
 
 @router.get("/me")
-async def get_current_user(current_user: User = Depends(get_current_user)):
+async def get_current_login_user(current_user: User = Depends(get_current_user)):
     return {
         "user_id": current_user.id,
         "name": current_user.name,
