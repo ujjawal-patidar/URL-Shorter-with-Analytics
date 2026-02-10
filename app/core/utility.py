@@ -1,7 +1,11 @@
 import string, random
+from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlalchemy.future import select
 from app.models.shorturl import ShortURL
+from app.models.daily_stats import DailyURLStats
+
 from fastapi import Request
 from user_agents import parse
 
@@ -9,6 +13,7 @@ from app.db.session import AsyncSessionLocal
 from app.models.analytics import Analytics
 from app.services.geoip import get_geo_info_from_ip
 from user_agents import parse
+
 
 # a - z // A - Z // 0 - 9
 ALPHABET = string.ascii_letters + string.digits
@@ -111,4 +116,43 @@ async def save_analytics(
         )
 
         db.add(analytics)
+        await db.commit()
+
+        # Now will Updating the daily stats
+        today = date.today()
+
+        # taking todays stats from DailyStates
+        result = await db.execute(
+            select(DailyURLStats).where(
+                DailyURLStats.short_url_id == short_url_id, DailyURLStats.date == today
+            )
+        )
+        daily_stats = result.scalar_one_or_none()
+
+        if not daily_stats:
+            # Will Create a new row if it is not exist
+            daily_stats = DailyURLStats(
+                short_url_id=short_url_id,
+                date=today,
+                clicks=1,
+                unique_visitors=1 if ip else 0,
+            )
+            db.add(daily_stats)
+        else:
+            # if not we will update oin the existing row
+            daily_stats.clicks += 1
+
+            if ip:
+                already_clicked_today = await db.execute(
+                    select(Analytics.id)
+                    .where(
+                        Analytics.short_code_id == short_url_id,
+                        Analytics.ip_address == ip,
+                        func.date(Analytics.clicked_at) == today,
+                    )
+                    .limit(1)  # just need one row
+                )
+                if already_clicked_today.scalar() is None:
+                    daily_stats.unique_visitors += 1
+
         await db.commit()

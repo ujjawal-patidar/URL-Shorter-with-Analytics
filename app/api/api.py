@@ -1,7 +1,9 @@
 from fastapi import APIRouter
-from app.api.routes import auth, links, qr, redirect, analytics
+from app.api.routes import auth, links, qr, redirect, analytics, static_route
 
 api_router = APIRouter()
+
+api_router.include_router(static_route.router, tags=["Static routes"])
 
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
 

@@ -21,17 +21,3 @@ async def create_tables(app: FastAPI):
 app = FastAPI(title="URL Shortener + Analytics", lifespan=create_tables)
 
 app.include_router(api_router)
-
-
-@app.get("/health")
-def health_check() -> dict:
-    return {"response": "ok"}
-
-
-@app.get("/")
-def db_Application_check(db: AsyncSession = Depends(get_async_db)):
-    return {
-        "Application": "URL Shortener + Analytics",
-        "Application status": "running",
-        "Postgres Database": "connected",
-    }
