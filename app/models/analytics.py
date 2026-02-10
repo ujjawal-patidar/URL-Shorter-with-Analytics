@@ -1,9 +1,10 @@
+from datetime import datetime
 from sqlalchemy import Column, ForeignKey, String, DateTime, Float
 from app.db.session import Base
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 
 class Analytics(Base):
@@ -11,18 +12,18 @@ class Analytics(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     short_code_id = Column(UUID(as_uuid=True), ForeignKey("short_urls.id"), nullable=False)
-    clicked_at = Column(DateTime(timezone=True), server_default=func.now())
+    clicked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    country = Column(String(50), nullable=True)
-    city = Column(String(100), nullable=True)
-    latitude = Column(Float, nullable=True)
-    longitude = Column(Float, nullable=True)
+    country: Mapped[str] = mapped_column(String(50), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=True)
+    latitude: Mapped[float] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float] = mapped_column(Float, nullable=True)
 
-    device_type = Column(String(50), nullable=True)
-    os = Column(String(50), nullable=True)
-    browser = Column(String(50), nullable=True)
+    device_type: Mapped[str] = mapped_column(String(50), nullable=True)
+    os: Mapped[str] = mapped_column(String(50), nullable=True)
+    browser: Mapped[str] = mapped_column(String(50), nullable=True)
 
-    referrer = Column(String(2000), nullable=True)
-    ip_address = Column(String(50), nullable=True)
+    referrer: Mapped[str] = mapped_column(String(2000), nullable=True)
+    ip_address: Mapped[str] = mapped_column(String(50), nullable=True)
 
     short_url = relationship("ShortURL", back_populates="analytics")
