@@ -6,11 +6,19 @@ from app.db.session import get_async_db
 from app.models.shorturl import ShortURL
 from sqlalchemy import select, update
 from app.core.utility import save_analytics
+from app.core.utility import redis
+import json
+
+CACHE_EXPIRATION_TIME = 60 * 10
 
 router = APIRouter()
 
 
-@router.get("/{short_code}")
+@router.get(
+    "/{short_code}",
+    summary="Redirect to the original URL",
+    response_description="Redirects the user to the original URL",
+)
 async def redirect_to_original_url(
     short_code: str,
     request: Request,
@@ -18,8 +26,23 @@ async def redirect_to_original_url(
     db: AsyncSession = Depends(get_async_db),
     user_agent: Annotated[str | None, Header()] = None,
 ):
-    # print(user_agent)
-    # Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36
+    cache_key = f"short_code:{short_code}"
+
+    cache_data = await redis.get(cache_key)
+
+    if cache_data:
+        data = json.loads(cache_data)
+
+        background_tasks.add_task(
+            save_analytics,
+            request=request,
+            short_url_id=data["short_url_id"],
+            user_agent=user_agent,
+        )
+
+        print("cached")
+        return RedirectResponse(url=data["original_url"], status_code=302)
+
     result = await db.execute(
         select(ShortURL).where(ShortURL.short_code == short_code, ShortURL.is_active == True)
     )
@@ -38,6 +61,18 @@ async def redirect_to_original_url(
 
     background_tasks.add_task(
         save_analytics, request=request, short_url_id=short_url.id, user_agent=user_agent
+    )
+
+    # cache DB result
+    await redis.set(
+        cache_key,
+        json.dumps(
+            {
+                "short_url_id": str(short_url.id),
+                "original_url": short_url.original_url,
+            }
+        ),
+        ex=CACHE_EXPIRATION_TIME,
     )
 
     return RedirectResponse(url=short_url.original_url, status_code=302)

@@ -45,11 +45,6 @@ async def get_all_links(
     return links
 
 
-@router.get("/{short_code}")
-async def get_details_of_short_url():
-    pass
-
-
 @router.delete("/{short_code}")
 async def delete_short_url(
     short_code: str,

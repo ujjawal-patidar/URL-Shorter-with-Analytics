@@ -1,3 +1,4 @@
+from datetime import date
 from app.db.session import Base
 from sqlalchemy import Column, Date, ForeignKey, BigInteger, Integer
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,7 +19,7 @@ class DailyURLStats(Base):
         unique=True,
     )
 
-    date: Mapped[Date] = mapped_column(Date, nullable=False, index=True, unique=True)
+    date_of_stat: Mapped[date] = mapped_column(Date, nullable=False, index=True)
 
     clicks: Mapped[int] = mapped_column(BigInteger, default=0)
     unique_visitors: Mapped[int] = mapped_column(Integer, default=0)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from enum import Enum
 
@@ -18,3 +18,9 @@ class AnalyticsResponse(BaseModel):
 class OrderEnum(str, Enum):
     asc = "asc"
     desc = "desc"
+
+
+class DailyStatsResponse(BaseModel):
+    date_of_stat: date
+    clicks: int
+    unique_visitors: int

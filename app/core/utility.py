@@ -13,7 +13,9 @@ from app.db.session import AsyncSessionLocal
 from app.models.analytics import Analytics
 from app.services.geoip import get_geo_info_from_ip
 from user_agents import parse
+from upstash_redis.asyncio import Redis
 
+redis = Redis.from_env()
 
 # a - z // A - Z // 0 - 9
 ALPHABET = string.ascii_letters + string.digits
@@ -48,50 +50,77 @@ async def get_ip(request: Request) -> str:
 
 
 # async def save_analytics(
-#         request,
-#         short_url_id,
-#         user-agent:str | None,
-#     ):
-# user_agent_info = parse(user_agent)
-# browser =  user_agent and (user_agent_info.browser)
-# os_name = user_agent and (user_agent_info.get_os())
+#     request,
+#     short_url_id,
+#     user_agent: str | None,
+# ):
+#     async with AsyncSessionLocal() as db:
+#         ip = await get_ip(request)
+#         user = parse(user_agent) if user_agent else None
 
-# device = user_agent_info.get_device()
+#         geo = None
+#         try:
+#             geo = get_geo_info_from_ip(ip)
+#         except Exception:
+#             print("No data related to IP")
 
-# ip = await get_ip(request)
+#         analytics = Analytics(
+#             short_code_id=short_url_id,
+#             ip_address=ip,
+#             referrer=request.headers.get("referer"),
+#             browser=user.browser.family if user else None,
+#             os=user.os.family if user else None,
+#             device_type=user.device.family if user else None,
+#             country=geo.country.name if geo and geo.country else None,
+#             city=geo.city.name if geo and geo.city else None,
+#             latitude=geo.location.latitude if geo and geo.location else None,
+#             longitude=geo.location.longitude if geo and geo.location else None,
+#         )
 
-# try:
-#     referer = request.headers.get("referer")
-#     geo_info = get_country_from_ip(ip)
-#     country = geo_info and geo_info.country and (geo_info.country.name)
-#     city = geo_info and geo_info.city and (geo_info.city.name)
-#     latitude = geo_info and geo_info.location and (geo_info.location.latitude)
-#     longitude = geo_info and geo_info.location and (geo_info.location.longitude)
+#         db.add(analytics)
+#         await db.commit()
 
-# except Exception as err:
-#     print("No Data for this IP")
+#         # Now will Updating the daily stats
+#         today = date.today()
 
-# else:
-#     return {
-#         "browser" : browser[0] if browser else None,
-#         "os" : os_name,
-#         "device" : device,
-#         "ip" :ip ,
-#         "referer": referer,
-#         "country" : country,
-#         "city" : city,
-#         "latitude" : latitude,
-#         "longitude": longitude,
-#         "geo_info" : geo_info
-#     }
-# app/tasks/analytics.py
+#         # taking todays stats from DailyStates
+#         result = await db.execute(
+#             select(DailyURLStats).where(
+#                 DailyURLStats.short_url_id == short_url_id, DailyURLStats.date_of_stat == today
+#             )
+#         )
+#         daily_stats = result.scalar_one_or_none()
+
+#         if not daily_stats:
+#             # Will Create a new row if it is not exist
+#             daily_stats = DailyURLStats(
+#                 short_url_id=short_url_id,
+#                 date_of_stat=today,
+#                 clicks=1,
+#                 unique_visitors=1 if ip else 0,
+#             )
+#             db.add(daily_stats)
+#         else:
+#             # if not we will update oin the existing row
+#             daily_stats.clicks += 1
+
+#             if ip:
+#                 already_clicked_today = await db.execute(
+#                     select(Analytics.id)
+#                     .where(
+#                         Analytics.short_code_id == short_url_id,
+#                         Analytics.ip_address == ip,
+#                         func.date(Analytics.clicked_at) == today,
+#                     )
+#                     .limit(1)  # just need one row
+#                 )
+#                 if already_clicked_today.scalar() is None:
+#                     daily_stats.unique_visitors += 1
+
+#         await db.commit()
 
 
-async def save_analytics(
-    request,
-    short_url_id,
-    user_agent: str | None,
-):
+async def save_analytics(request: Request, short_url_id, user_agent: str | None):
     async with AsyncSessionLocal() as db:
         ip = await get_ip(request)
         user = parse(user_agent) if user_agent else None
@@ -100,8 +129,46 @@ async def save_analytics(
         try:
             geo = get_geo_info_from_ip(ip)
         except Exception:
-            print("No data related to IP")
+            print("No geo data for IP")
 
+        today = date.today()
+
+        # check if this IP already clicked today
+        already_clicked_today = False
+        if ip:
+            result = await db.execute(
+                select(Analytics.id)
+                .where(
+                    Analytics.short_code_id == short_url_id,
+                    Analytics.ip_address == ip,
+                    func.date(Analytics.clicked_at) == today,
+                )
+                .limit(1)
+            )
+            already_clicked_today = True if result.scalar() else False
+
+        # get or create daily stats
+        result = await db.execute(
+            select(DailyURLStats).where(
+                DailyURLStats.short_url_id == short_url_id, DailyURLStats.date_of_stat == today
+            )
+        )
+        daily_stats = result.scalar_one_or_none()
+
+        if not daily_stats:
+            daily_stats = DailyURLStats(
+                short_url_id=short_url_id,
+                date_of_stat=today,
+                clicks=1,
+                unique_visitors=1,
+            )
+            db.add(daily_stats)
+        else:
+            daily_stats.clicks += 1
+            if not already_clicked_today:
+                daily_stats.unique_visitors += 1
+
+        # Add analytics record AFTER updating daily stats
         analytics = Analytics(
             short_code_id=short_url_id,
             ip_address=ip,
@@ -114,45 +181,6 @@ async def save_analytics(
             latitude=geo.location.latitude if geo and geo.location else None,
             longitude=geo.location.longitude if geo and geo.location else None,
         )
-
         db.add(analytics)
-        await db.commit()
-
-        # Now will Updating the daily stats
-        today = date.today()
-
-        # taking todays stats from DailyStates
-        result = await db.execute(
-            select(DailyURLStats).where(
-                DailyURLStats.short_url_id == short_url_id, DailyURLStats.date == today
-            )
-        )
-        daily_stats = result.scalar_one_or_none()
-
-        if not daily_stats:
-            # Will Create a new row if it is not exist
-            daily_stats = DailyURLStats(
-                short_url_id=short_url_id,
-                date=today,
-                clicks=1,
-                unique_visitors=1 if ip else 0,
-            )
-            db.add(daily_stats)
-        else:
-            # if not we will update oin the existing row
-            daily_stats.clicks += 1
-
-            if ip:
-                already_clicked_today = await db.execute(
-                    select(Analytics.id)
-                    .where(
-                        Analytics.short_code_id == short_url_id,
-                        Analytics.ip_address == ip,
-                        func.date(Analytics.clicked_at) == today,
-                    )
-                    .limit(1)  # just need one row
-                )
-                if already_clicked_today.scalar() is None:
-                    daily_stats.unique_visitors += 1
 
         await db.commit()
