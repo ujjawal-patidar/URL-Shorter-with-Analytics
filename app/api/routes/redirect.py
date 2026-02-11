@@ -7,6 +7,7 @@ from app.models.shorturl import ShortURL
 from sqlalchemy import select, update
 from app.core.utility import save_analytics
 from app.core.utility import redis
+from app.core.click_rate_limit import click_rate_limiter
 import json
 
 CACHE_EXPIRATION_TIME = 60 * 10
@@ -19,6 +20,7 @@ router = APIRouter()
     summary="Redirect to the original URL",
     response_description="Redirects the user to the original URL",
 )
+@click_rate_limiter(max_clicks=5, window=120)
 async def redirect_to_original_url(
     short_code: str,
     request: Request,

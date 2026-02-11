@@ -8,16 +8,33 @@ from app.models.user import User
 from app.schemas.shorturl import ShortURLResponse
 from app.api.deps import get_current_user
 from sqlalchemy import select
+from app.core.click_rate_limit import create_rate_limiter
 
 router = APIRouter()
 
 
 @router.post("/")
+@create_rate_limiter(max_creation=5, window=60)
 async def create_short_link(
     data: ShortURlCreate,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
+    query = select(ShortURL).where(
+        ShortURL.user_id == data.user_id, ShortURL.original_url == data.original_url
+    )
+    result = await db.execute(query)
+    existing_link = result.scalar_one_or_none()
+
+    if existing_link:
+        # Return existing short URL instead of creating a new one
+        return {
+            "is_active": existing_link.is_active,
+            "original_url": existing_link.original_url,
+            "short_code": existing_link.short_code,
+            "created_at": existing_link.created_at,
+            "message": "Short URL already exists",
+        }
 
     # generate a unique short code
     short_code = await generate_unique_short_code(db)

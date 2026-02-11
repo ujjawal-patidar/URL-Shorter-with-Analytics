@@ -16,7 +16,6 @@ class DailyURLStats(Base):
         ForeignKey("short_urls.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-        unique=True,
     )
 
     date_of_stat: Mapped[date] = mapped_column(Date, nullable=False, index=True)
