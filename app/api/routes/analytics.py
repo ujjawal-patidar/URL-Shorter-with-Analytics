@@ -29,10 +29,15 @@ async def get_analytics(
     db: AsyncSession = Depends(get_async_db),
 ):
     # Fetch the short URL
-    result = await db.execute(select(ShortURL).where(ShortURL.short_code == short_code))
+    result = await db.execute(
+        select(ShortURL).where(
+            ShortURL.short_code == short_code, ShortURL.user_id == current_user.id
+        )
+    )
+
     short_url = result.scalar_one_or_none()
     if not short_url:
-        raise HTTPException(status_code=404, detail="Short URL not found")
+        raise HTTPException(status_code=404, detail="Short URL not found / Not Authorized")
 
     # default start_date id id the short URL creation date
     if not start_date:
@@ -80,10 +85,14 @@ async def get_analytics_of_date(
     db: AsyncSession = Depends(get_async_db),
 ):
     # Fetch short URL
-    result = await db.execute(select(ShortURL).where(ShortURL.short_code == short_code))
+    result = await db.execute(
+        select(ShortURL).where(
+            ShortURL.short_code == short_code, ShortURL.user_id == current_user.id
+        )
+    )
     short_url = result.scalar_one_or_none()
     if not short_url:
-        raise HTTPException(status_code=404, detail="Short URL not found")
+        raise HTTPException(status_code=404, detail="Short URL not found / Not Authorized")
 
     # Default start_date is the creation date of shortURL
     if not start_date:
@@ -119,10 +128,14 @@ async def short_url_total_clicks(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    result = await db.execute(select(ShortURL).where(ShortURL.short_code == short_code))
+    result = await db.execute(
+        select(ShortURL).where(
+            ShortURL.short_code == short_code, ShortURL.user_id == current_user.id
+        )
+    )
     short_url = result.scalar_one_or_none()
 
     if not short_url:
-        raise HTTPException(status_code=404, detail="Short URL not found")
+        raise HTTPException(status_code=404, detail="Short URL not found / Not Authorized")
 
     return {"short_code": short_code, "total_clicks": short_url.click_count}

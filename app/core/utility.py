@@ -45,7 +45,7 @@ async def get_ip(request: Request) -> str:
             client_ip = request.client.host
 
     if not client_ip or client_ip == "127.0.0.1":
-        return "14.0.0.0"  # just for avoiding demo
+        return "14.0.0.0"  # just for providing demo
     return client_ip
 
 

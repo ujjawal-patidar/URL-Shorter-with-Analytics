@@ -22,7 +22,11 @@ async def get_qr(
     current_user=Depends(get_current_user),
 ):
 
-    result = await db.execute(select(ShortURL).where(ShortURL.short_code == short_code))
+    result = await db.execute(
+        select(ShortURL).where(
+            ShortURL.short_code == short_code, ShortURL.user_id == current_user.id
+        )
+    )
     link = result.scalar_one_or_none()
 
     if not link:
