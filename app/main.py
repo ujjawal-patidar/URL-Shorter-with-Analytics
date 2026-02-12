@@ -1,10 +1,9 @@
 from contextlib import asynccontextmanager
 from app.models import user, shorturl
-from app.db.session import Base, engine, get_async_db
+from app.db.session import Base, engine
 from app.api.api import api_router
 from app.services.geoip import init_geoip, close_geoip
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 
 
 @asynccontextmanager
