@@ -20,7 +20,7 @@ jobs:
       UPSTASH_REDIS_REST_URL: ${{secrets.UPSTASH_REDIS_REST_URL}}
       UPSTASH_REDIS_REST_TOKEN: ${{secrets.UPSTASH_REDIS_REST_TOKEN}}
       GEOIP_DB_PATH : ${{secrets.GEOIP_DB_PATH}}
-      PORT: ${{secrets.SECRET_KEY}}
+      PORT: ${{secrets.PORT}}
 
     steps:
       - name: Checkout code
