@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: shortener-api
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:${PORT}"  # Maps local PORT to container PORT
+    volumes:
+      - ./app/db/GeoLite2-City.mmdb:/app/db/GeoLite2-City.mmdb:ro
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"

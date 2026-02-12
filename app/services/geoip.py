@@ -1,8 +1,14 @@
 import geoip2.database
 from geoip2.models import City
 from pathlib import Path
+import os
+import dotenv
 
-GEO_DB_PATH = Path("app/db/GeoLite2-City.mmdb")
+dotenv.load_dotenv()
+
+GEOIP_DB_PATH = os.getenv("GEOIP_DB_PATH")
+
+GEO_DB_PATH = Path(GEOIP_DB_PATH)
 
 reader: geoip2.database.Reader | None = None
 
