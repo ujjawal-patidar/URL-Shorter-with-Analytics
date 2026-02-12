@@ -12,16 +12,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    env:
-      DATABASE_URI: ${{secrets.DATABASE_URI}}
-      DATABASE_URI_SYNC: ${{secrets.DATABASE_URI_SYNC}}
-      SECRET_KEY: ${{secrets.SECRET_KEY}}
-      ALGORITHM_TO_ENCODE: ${{secrets.ALGORITHM_TO_ENCODE}}
-      UPSTASH_REDIS_REST_URL: ${{secrets.UPSTASH_REDIS_REST_URL}}
-      UPSTASH_REDIS_REST_TOKEN: ${{secrets.UPSTASH_REDIS_REST_TOKEN}}
-      GEOIP_DB_PATH : ${{secrets.GEOIP_DB_PATH}}
-      PORT: ${{secrets.PORT}}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
