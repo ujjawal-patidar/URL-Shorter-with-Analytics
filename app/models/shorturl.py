@@ -14,7 +14,7 @@ class ShortURL(Base):
     original_url: Mapped[str] = mapped_column(Text, nullable=False)
     short_code = Column(String, unique=True, nullable=False, index=True)
 
-    is_active = Column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     click_count = Column(BigInteger, default=0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

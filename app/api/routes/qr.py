@@ -43,7 +43,7 @@ async def get_qr(
     qr = qrcode.make(short_url)
 
     buffer = io.BytesIO()
-    qr.save(buffer, format="png")
+    qr.save(buffer, "png")
 
     image_bytes = buffer.getvalue()
     image_base64 = base64.b64encode(image_bytes).decode()

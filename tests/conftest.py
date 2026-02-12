@@ -8,6 +8,8 @@ from app.db.session import get_async_db
 from app.models.user import User
 from app.core.security import get_password_hash
 
+# pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 async def client():
@@ -48,5 +50,5 @@ async def auth_token(client, test_user):
 
 @pytest.fixture
 async def auth_client(client, auth_token):
-    client.header.update({"Authorization": f"Bearer {auth_token}"})
+    client.headers.update({"Authorization": f"Bearer {auth_token}"})
     return client

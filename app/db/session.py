@@ -11,7 +11,7 @@ DATABASE_URI = os.getenv("DATABASE_URI")
 
 # Now we will create a engine instance
 engine = create_async_engine(
-    DATABASE_URI,
+    str(DATABASE_URI),
     echo=True,
     future=True,
     pool_pre_ping=True,
