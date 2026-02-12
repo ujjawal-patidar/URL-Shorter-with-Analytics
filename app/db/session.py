@@ -9,9 +9,12 @@ load_dotenv()
 
 DATABASE_URI = os.getenv("DATABASE_URI")
 
+if DATABASE_URI is None:
+    raise ValueError("DATABASE_URI is not set")
+
 # Now we will create a engine instance
 engine = create_async_engine(
-    str(DATABASE_URI),
+    DATABASE_URI,
     echo=True,
     future=True,
     pool_pre_ping=True,
