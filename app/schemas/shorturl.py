@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class ShortURlCreate(BaseModel):
-    user_id: UUID
     original_url: str
 
 

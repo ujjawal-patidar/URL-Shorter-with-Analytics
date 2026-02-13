@@ -13,7 +13,7 @@ from app.core.click_rate_limit import create_rate_limiter
 router = APIRouter()
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 @create_rate_limiter(max_creation=5, window=60)
 async def create_short_link(
     data: ShortURlCreate,
@@ -21,7 +21,7 @@ async def create_short_link(
     current_user: User = Depends(get_current_user),
 ):
     query = select(ShortURL).where(
-        ShortURL.user_id == data.user_id, ShortURL.original_url == data.original_url
+        ShortURL.user_id == current_user.id, ShortURL.original_url == data.original_url
     )
     result = await db.execute(query)
     existing_link = result.scalar_one_or_none()
@@ -39,7 +39,9 @@ async def create_short_link(
     # generate a unique short code
     short_code = await generate_unique_short_code(db)
 
-    new_link = ShortURL(user_id=data.user_id, original_url=data.original_url, short_code=short_code)
+    new_link = ShortURL(
+        user_id=current_user.id, original_url=data.original_url, short_code=short_code
+    )
 
     db.add(new_link)
     await db.commit()
@@ -52,7 +54,7 @@ async def create_short_link(
     }
 
 
-@router.get("/", response_model=list[ShortURLResponse])
+@router.get("/", response_model=list[ShortURLResponse], status_code=status.HTTP_200_OK)
 async def get_all_links(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
@@ -62,7 +64,7 @@ async def get_all_links(
     return links
 
 
-@router.delete("/{short_code}")
+@router.delete("/{short_code}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_short_url(
     short_code: str,
     db: AsyncSession = Depends(get_async_db),

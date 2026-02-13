@@ -14,7 +14,6 @@ jobs:
 
     env:
       DATABASE_URI: ${{secrets.DATABASE_URI}}
-      DATABASE_URI_SYNC: ${{secrets.DATABASE_URI_SYNC}}
       SECRET_KEY: ${{secrets.SECRET_KEY}}
       ALGORITHM_TO_ENCODE: ${{secrets.ALGORITHM_TO_ENCODE}}
       UPSTASH_REDIS_REST_URL: ${{secrets.UPSTASH_REDIS_REST_URL}}
