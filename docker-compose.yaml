@@ -4,8 +4,8 @@ services:
   app:
     build: .
     container_name: shortener-api
-    env_file:
-      - .env
+    # env_file:
+    #   - .env      we can skip this so that it will inherit env vars from workflow instead
     ports:
       - "${PORT}:${PORT}"  #maps local PORT to container PORT
     volumes:
