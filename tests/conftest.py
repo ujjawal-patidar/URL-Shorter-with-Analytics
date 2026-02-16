@@ -1,5 +1,6 @@
 import uuid
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from app.main import app
 from httpx import AsyncClient, ASGITransport
@@ -19,7 +20,7 @@ AsyncSessionLocal = async_sessionmaker(engine_test, expire_on_commit=False, clas
 
 
 # create/drop tables once per session
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def setup_db():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -29,7 +30,7 @@ async def setup_db():
 
 
 # provide a session for each test
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(setup_db):
     async with AsyncSessionLocal() as session:
         yield session
@@ -37,8 +38,8 @@ async def db_session(setup_db):
 
 
 # Override FastAPI dependency to use test DB
-@pytest.fixture(autouse=True)
-def override_get_db(db_session):
+@pytest_asyncio.fixture(autouse=True)
+async def override_get_db(db_session):
     async def _override_get_async_db():
         async with db_session as s:
             yield s
@@ -46,14 +47,14 @@ def override_get_db(db_session):
     app.dependency_overrides[get_async_db] = _override_get_async_db
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession):
     email = f"test_user_{uuid.uuid4()}@test.com"
     user = User(
@@ -67,7 +68,7 @@ async def test_user(db_session: AsyncSession):
     return {"id": user.id, "email": user.email, "password": "Password@123"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_token(client, test_user):
     res = await client.post(
         "/auth/login",
@@ -77,7 +78,7 @@ async def auth_token(client, test_user):
     return res.json()["access_token"]
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_client(client, auth_token):
     client.headers.update({"Authorization": f"Bearer {auth_token}"})
     return client
