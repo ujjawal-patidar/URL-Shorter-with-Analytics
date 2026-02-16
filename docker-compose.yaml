@@ -3,6 +3,8 @@
 services:
   app:
     build: .
+    image: ${DOCKERHUB_USERNAME}/url-shortener:latest  # ← add this
+
     container_name: shortener-api
     # env_file:
     #   - .env      we can skip this so that it will inherit env vars from workflow instead

@@ -68,7 +68,7 @@ def create_rate_limiter(max_creation: int = 5, window: int = 60):
                 raise Exception("Not authenticated")
 
             # Redis key per visitor per short code
-            key = f"create:short_url:{[curr_user.id]}"
+            key = f"create:short_url:{curr_user.id}"
 
             # it will Increment click count atomically and return latest count
             current_created = await redis.incr(key)
