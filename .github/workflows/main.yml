@@ -58,3 +58,9 @@ jobs:
       - name: Push image to Docker Hub
         if: github.ref == 'refs/heads/main' && success()
         run: docker compose push
+
+      - name: Trigger Render deployment
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          curl -X POST "https://api.render.com/deploy/${{secrets.RENDER_SERVICE_ID}}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
