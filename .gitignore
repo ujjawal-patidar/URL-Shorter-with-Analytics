@@ -15,4 +15,4 @@ venv/
 .idea/
 
 .DS_Store
-*.mmdb
+# *.mmdb
