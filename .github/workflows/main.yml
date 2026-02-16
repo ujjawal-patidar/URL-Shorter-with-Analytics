@@ -54,7 +54,7 @@ jobs:
         run: |
           docker compose run --rm app pytest tests/ --maxfail=1 --disable-warnings -v
       
-       # push only if branch is main AND tests passed
+       # push only if branch is main and tests are passed successfully
       - name: Push image to Docker Hub
         if: github.ref == 'refs/heads/main' && success()
         run: docker compose push
