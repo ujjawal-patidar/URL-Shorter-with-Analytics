@@ -50,7 +50,7 @@ jobs:
       #     pip install pre-commit pytest aiosqlite
 
       - name: Build Docker image
-        run: docker compose build
+        run: docker compose build --no-cache
 
       # - name: Run pre-commit
       #   run: docker compose run --rm app pre-commit run --all-files
