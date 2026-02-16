@@ -1,3 +1,9 @@
+# import pytest
+# from app.models.shorturl import ShortURL
+
+# pytestmark = pytest.mark.asyncio
+
+
 async def test_create_short_link(auth_client, test_user):
     payload = {
         "original_url": "https://example.com",
